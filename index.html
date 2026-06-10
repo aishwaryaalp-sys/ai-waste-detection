@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Waste Classification System</title>
+  <meta name="description" content="AI-powered waste classification with TensorFlow.js for plastic, paper, metal, and glass recycling." />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.14.0/dist/tf.min.js" defer></script>
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <!-- Animated neon circuit background (SVG) -->
+  <svg class="decorative-lines" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600" preserveAspectRatio="none">
+    <defs>
+      <linearGradient id="neonGrad" x1="0" x2="1">
+        <stop offset="0%" stop-color="#00f5ff" />
+        <stop offset="100%" stop-color="#b400ff" />
+      </linearGradient>
+    </defs>
+    <g stroke="url(#neonGrad)" stroke-width="1.8" fill="none" opacity="0.16">
+      <path class="line-path draw-path" d="M0,120 C200,40 400,200 600,120 S1000,80 1200,140"/>
+      <path class="line-path draw-path" d="M0,260 C260,180 460,320 700,260 S1040,200 1200,260"/>
+      <path class="line-path draw-path" d="M0,380 C220,320 420,420 640,380 S980,320 1200,380"/>
+    </g>
+  </svg>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-icon">♻️</span>
+      <div>
+        <h2>Smart Waste Classification</h2>
+        <p>AI-powered sorting for a greener future</p>
+      </div>
+    </div>
+    <nav class="nav-links">
+      <a href="#about">About</a>
+      <a href="#workflow">How It Works</a>
+      <a href="#classifier">Live Classifier</a>
+      <a href="#developer">Developer</a>
+      <button id="themeToggle" class="theme-toggle" aria-label="Toggle dark mode">🌙</button>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero section-hero">
+      <div class="hero-copy">
+        <span class="eyebrow">Next-gen waste intelligence</span>
+        <h1>Smart Waste Classification System</h1>
+        <p class="hero-subtitle">Sustainable waste management powered by AI. Upload an image or use your webcam to classify plastic, paper, metal, and glass instantly.</p>
+        <div class="hero-actions">
+          <a href="#classifier" class="button button-primary">
+            Try Classifier
+            <svg viewBox="0 0 24 24" aria-hidden="true" class="icon-arrow"><path d="M5 12h14m-6-6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+          <a href="#workflow" class="button button-secondary">Learn How It Works</a>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="hero-card glass-card interactive-card">
+          <div class="hero-visual-title">Smart Waste AI</div>
+          <div class="hero-rotating-circles">
+            <div class="hero-center-hub">
+              <div class="hub-inner">
+                <span class="hub-label">Match</span>
+                <strong class="hub-value">92%</strong>
+              </div>
+            </div>
+            <div class="floating-orbit">
+              <div class="floating-circle plastic">
+                <span class="float-label">Plastic</span>
+              </div>
+              <div class="floating-circle paper">
+                <span class="float-label">Paper</span>
+              </div>
+              <div class="floating-circle metal">
+                <span class="float-label">Metal</span>
+              </div>
+              <div class="floating-circle glass">
+                <span class="float-label">Glass</span>
+              </div>
+            </div>
+          </div>
+          <div class="hero-visual-grid">
+            <div class="hero-stat">
+              <span>98%</span>
+              <small>Recognition speed</small>
+            </div>
+            <div class="hero-stat">
+              <span>4 categories</span>
+              <small>Plastic, Paper, Metal, Glass</small>
+            </div>
+            <div class="hero-stat">
+              <span>Zero install</span>
+              <small>Browser-based AI</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="about" class="section about-section">
+      <div class="section-header">
+        <span class="section-label">About Project</span>
+        <h2>AI-enhanced recycling for smarter waste segregation</h2>
+      </div>
+      <div class="about-grid">
+        <div class="glass-card interactive-card">
+          <h3>What it does</h3>
+          <p>The system uses a TensorFlow.js model exported from Google Teachable Machine to classify waste from images in the browser.</p>
+        </div>
+        <div class="glass-card interactive-card">
+          <h3>Why it matters</h3>
+          <p>Proper segregation increases recycling rates and reduces contamination in recycling streams, improving efficiency across collection and processing.</p>
+        </div>
+        <div class="glass-card interactive-card">
+          <h3>How AI helps</h3>
+          <p>AI removes the guesswork by identifying material types instantly and helps users make better recycling decisions on the fly.</p>
+        </div>
+        <div class="glass-card interactive-card">
+          <h3>Environmental benefits</h3>
+          <p>Faster sorting reduces landfill waste, conserves resources, and supports a circular economy through smarter material reuse.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="workflow" class="section workflow-section">
+      <div class="section-header">
+        <span class="section-label">How It Works</span>
+        <h2>From image to insight in four easy steps</h2>
+      </div>
+      <div class="workflow-line-wrap">
+        <svg class="workflow-line" viewBox="0 0 1200 120" aria-hidden="true">
+          <defs>
+            <linearGradient id="arrowGrad" x1="0" x2="1"><stop offset="0%" stop-color="#00f5ff"/><stop offset="100%" stop-color="#b400ff"/></linearGradient>
+          </defs>
+          <path class="workflow-path draw-path" d="M50 60 H1150" stroke="url(#arrowGrad)" stroke-width="2" fill="none"/>
+          <path class="workflow-arrow" d="M1140 55 l20 5 -20 5" stroke="url(#arrowGrad)" stroke-width="2" fill="none"/>
+        </svg>
+        <div class="workflow-cards">
+          <article class="workflow-card glass-card interactive-card">
+            <svg class="workflow-icon" viewBox="0 0 48 48" aria-hidden="true"><path d="M12 16h24v8H12z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 28h16v8H16z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M25 4v8" stroke="currentColor" stroke-width="2"/><path d="M22 12h6" stroke="currentColor" stroke-width="2"/></svg>
+            <h3>Upload or webcam</h3>
+            <p>Choose a waste image or activate your camera to provide a live sample.</p>
+          </article>
+          <article class="workflow-card glass-card interactive-card">
+            <svg class="workflow-icon" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="10" fill="none" stroke="currentColor" stroke-width="2"/><path d="M24 14v10l6 4" stroke="currentColor" stroke-width="2"/></svg>
+            <h3>TensorFlow.js model</h3>
+            <p>The browser loads the trained model and analyzes the uploaded frame instantly.</p>
+          </article>
+          <article class="workflow-card glass-card interactive-card">
+            <svg class="workflow-icon" viewBox="0 0 48 48" aria-hidden="true"><path d="M12 20h24" stroke="currentColor" stroke-width="2"/><path d="M20 12l8 8-8 8" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+            <h3>AI identifies</h3>
+            <p>The model classifies the waste into plastic, paper, metal, or glass.</p>
+          </article>
+          <article class="workflow-card glass-card interactive-card">
+            <svg class="workflow-icon" viewBox="0 0 48 48" aria-hidden="true"><path d="M12 24l8 8 16-16" fill="none" stroke="currentColor" stroke-width="3"/></svg>
+            <h3>Result displayed</h3>
+            <p>The UI presents the detected category with confidence and recycling guidance.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="tech" class="section tech-section">
+      <div class="section-header">
+        <span class="section-label">Technology Stack</span>
+        <h2>Built with modern AI and web technologies</h2>
+      </div>
+      <div class="tech-grid">
+        <div class="tech-card glass-card interactive-card">
+          <svg class="stack-icon" viewBox="0 0 48 48" aria-hidden="true"><rect x="12" y="14" width="24" height="6" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><rect x="12" y="24" width="24" height="6" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><rect x="12" y="34" width="24" height="6" rx="3" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+          <h3>Google Teachable Machine</h3>
+          <p>Rapidly trains the waste classification model with image samples.</p>
+        </div>
+        <div class="tech-card glass-card interactive-card">
+          <svg class="stack-icon" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="10" fill="none" stroke="currentColor" stroke-width="2"/><path d="M24 14v10l6 4" stroke="currentColor" stroke-width="2"/></svg>
+          <h3>TensorFlow.js</h3>
+          <p>Runs the model directly in the browser for fast client-side inference.</p>
+        </div>
+        <div class="tech-card glass-card interactive-card">
+          <svg class="stack-icon" viewBox="0 0 48 48" aria-hidden="true"><path d="M16 12h16v24H16z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 18h8" stroke="currentColor" stroke-width="2"/><path d="M20 24h8" stroke="currentColor" stroke-width="2"/></svg>
+          <h3>HTML5</h3>
+          <p>Structured, accessible markup for a clean product experience.</p>
+        </div>
+        <div class="tech-card glass-card interactive-card">
+          <svg class="stack-icon" viewBox="0 0 48 48" aria-hidden="true"><path d="M16 14h16v8H16z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 26h16v8H16z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+          <h3>CSS3</h3>
+          <p>Glassmorphism, responsive layout, and smooth interactions.</p>
+        </div>
+        <div class="tech-card glass-card interactive-card">
+          <svg class="stack-icon" viewBox="0 0 48 48" aria-hidden="true"><path d="M16 16h16v16H16z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 20h8" stroke="currentColor" stroke-width="2"/><path d="M20 26h8" stroke="currentColor" stroke-width="2"/></svg>
+          <h3>JavaScript</h3>
+          <p>Controls webcam capture, uploads, and prediction workflow.</p>
+        </div>
+        <div class="tech-card glass-card interactive-card">
+          <svg class="stack-icon" viewBox="0 0 48 48" aria-hidden="true"><path d="M12 24h24" stroke="currentColor" stroke-width="2"/><path d="M20 16l-8 8 8 8" stroke="currentColor" stroke-width="2" fill="none"/><path d="M28 16l8 8-8 8" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+          <h3>GitHub</h3>
+          <p>Perfect for showcasing the project in a portfolio or college submission.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="categories" class="section categories-section">
+      <div class="section-header">
+        <span class="section-label">Waste Categories</span>
+        <h2>Recognized materials for smarter recycling</h2>
+      </div>
+      <div class="category-grid">
+        <article class="category-card glass-card interactive-card">
+          <svg class="category-icon" viewBox="0 0 48 48" aria-hidden="true"><path d="M14 12h20v24H14z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M18 18h12" stroke="currentColor" stroke-width="2"/><path d="M18 24h12" stroke="currentColor" stroke-width="2"/></svg>
+          <h3>Plastic Waste</h3>
+          <p>Includes bottles, containers, packaging, and single-use plastics that can be sorted for recycling.</p>
+        </article>
+        <article class="category-card glass-card interactive-card">
+          <svg class="category-icon" viewBox="0 0 48 48" aria-hidden="true"><path d="M12 14h24v20H12z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 20h16" stroke="currentColor" stroke-width="2"/><path d="M16 26h16" stroke="currentColor" stroke-width="2"/></svg>
+          <h3>Paper Waste</h3>
+          <p>Newspapers, cardboard, office paper, and packaging materials that should be kept dry for reuse.</p>
+        </article>
+        <article class="category-card glass-card interactive-card">
+          <svg class="category-icon" viewBox="0 0 48 48" aria-hidden="true"><rect x="14" y="12" width="20" height="24" rx="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M18 20h12" stroke="currentColor" stroke-width="2"/><path d="M18 28h12" stroke="currentColor" stroke-width="2"/></svg>
+          <h3>Metal Waste</h3>
+          <p>Aluminum cans, tins, foil, and metal scraps that are valuable for recycling streams.</p>
+        </article>
+        <article class="category-card glass-card interactive-card">
+          <svg class="category-icon" viewBox="0 0 48 48" aria-hidden="true"><path d="M16 14c0 0 4-6 8-6s8 6 8 6v22c0 0-4 6-8 6s-8-6-8-6z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M24 20v10" stroke="currentColor" stroke-width="2"/></svg>
+          <h3>Glass Waste</h3>
+          <p>Bottles, jars, and glass containers that are reusable when properly collected.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="classifier" class="section classifier-section">
+      <div class="section-header">
+        <span class="section-label">Live Classifier</span>
+        <h2>Predict waste categories instantly</h2>
+      </div>
+      <div class="classifier-grid">
+        <div class="classifier-panel glass-card interactive-card">
+          <div class="panel-title">Webcam Preview</div>
+          <div class="preview-frame">
+            <video id="webcamPreview" autoplay muted playsinline class="preview-video"></video>
+            <img id="imagePreview" alt="Uploaded waste preview" class="preview-image" />
+            <div class="preview-overlay">Live waste detection in the browser</div>
+          </div>
+          <div class="classifier-controls">
+            <button id="webcamButton" class="button button-secondary">Open Webcam</button>
+            <label class="button button-primary file-label">
+              Upload Image
+              <input id="uploadInput" type="file" accept="image/*" hidden />
+            </label>
+            <button id="predictButton" class="button button-accent">Predict</button>
+          </div>
+        </div>
+        <div class="result-panel glass-card interactive-card">
+          <div class="panel-title">Prediction Dashboard</div>
+          <div class="result-card">
+            <span class="result-label">Detected Category</span>
+            <h3 id="resultCategory">Awaiting input</h3>
+            <p id="resultDetails">Upload an image or open the webcam to start classification.</p>
+          </div>
+          <div class="confidence-card">
+            <div class="confidence-header">
+              <span>Confidence</span>
+              <span id="confidenceValue">0%</span>
+            </div>
+            <div class="confidence-bar">
+              <div id="confidenceFill" class="confidence-fill"></div>
+            </div>
+          </div>
+          <div class="status-box glass-card" id="statusBox">Status: Model initialization pending...</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="features" class="section features-section">
+      <div class="section-header">
+        <span class="section-label">Project Features</span>
+        <h2>Capabilities designed for real-world applications</h2>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card glass-card interactive-card">Real-time Classification</div>
+        <div class="feature-card glass-card interactive-card">Browser-Based Processing</div>
+        <div class="feature-card glass-card interactive-card">No Installation Required</div>
+        <div class="feature-card glass-card interactive-card">Fast Predictions</div>
+        <div class="feature-card glass-card interactive-card">Environment Friendly</div>
+        <div class="feature-card glass-card interactive-card">Responsive Design</div>
+      </div>
+    </section>
+
+    <section id="results" class="section results-section">
+      <div class="section-header">
+        <span class="section-label">Results & Performance</span>
+        <h2>Model accuracy and prediction insights</h2>
+      </div>
+      <div class="results-grid">
+        <div class="glass-card performance-card interactive-card">
+          <h3>Model Accuracy</h3>
+          <p>The classifier leverages a trained TensorFlow.js model to deliver consistent category detection across common waste items.</p>
+          <div class="animated-circles-container">
+            <div class="animated-material-circle plastic">
+              <div class="circle-inner">
+                <span class="material-name">Plastic</span>
+                <span class="material-value">92%</span>
+              </div>
+            </div>
+            <div class="animated-material-circle paper">
+              <div class="circle-inner">
+                <span class="material-name">Paper</span>
+                <span class="material-value">89%</span>
+              </div>
+            </div>
+            <div class="animated-material-circle metal">
+              <div class="circle-inner">
+                <span class="material-name">Metal</span>
+                <span class="material-value">86%</span>
+              </div>
+            </div>
+            <div class="animated-material-circle glass">
+              <div class="circle-inner">
+                <span class="material-name">Glass</span>
+                <span class="material-value">90%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="glass-card sample-card interactive-card">
+          <h3>Sample Predictions</h3>
+          <ul>
+            <li>Image 1: Plastic bottle → Plastic</li>
+            <li>Image 2: Cardboard box → Paper</li>
+            <li>Image 3: Soda can → Metal</li>
+            <li>Image 4: Glass jar → Glass</li>
+          </ul>
+          <p class="muted">Performance statistics are presented for a polished demo experience and can be updated with live dataset results.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="developer" class="section developer-section">
+      <div class="section-header">
+        <span class="section-label">Developer</span>
+        <h2>Project author and portfolio showcase</h2>
+      </div>
+      <div class="developer-card glass-card interactive-card">
+        <div class="developer-avatar">👩‍💻</div>
+        <div class="developer-info">
+          <h3>AISWARYA R NAIR</h3>
+          <p>Developer building intuitive AI products for sustainable waste management and impactful portfolio presentations.</p>
+          <div class="developer-links">
+            <a href="https://github.com/" target="_blank" rel="noreferrer">GitHub</a>
+            <a href="https://www.linkedin.com/" target="_blank" rel="noreferrer">LinkedIn</a>
+          </div>
+          <div class="developer-contact">
+            <span>Email: aishwaryaalp@gmail.com</span>
+            <span>Location: Palakkad,Kerala,India</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div>© 2026 Smart Waste Classification System</div>
+    <div class="footer-links">
+      <a href="#classifier">Live Demo</a>
+      <a href="#tech">Stack</a>
+      <a href="#developer">Developer</a>
+      <a href="https://github.com/" target="_blank" rel="noreferrer">GitHub Repo</a>
+    </div>
+    <div>Built with TensorFlow.js, HTML5, CSS3, and JavaScript.</div>
+  </footer>
+</body>
+</html>
