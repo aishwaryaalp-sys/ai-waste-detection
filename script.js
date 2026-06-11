@@ -60,35 +60,66 @@
 
     predictButton?.addEventListener('click', async () => {
       const statusBox = document.getElementById('statusBox');
-      statusBox.textContent = 'Status: Running prediction...';
-      // If a real model is loaded, use it. This placeholder simulates predictions.
+      if (statusBox) statusBox.textContent = 'Status: Running prediction...';
       try {
-        let useImage = document.getElementById('imagePreview').src;
+        const useImage = document.getElementById('imagePreview').src;
         let confidence = 0;
         let category = 'Unknown';
         if (model) {
-          // TODO: Run actual model inference here. Example for Teachable Machine:
-          // const tensor = tf.browser.fromPixels(imageElement).resizeNearestNeighbor([224,224]).toFloat().expandDims();
-          // const preds = await model.predict(tensor).data();
-          // pick highest
-          statusBox.textContent = 'Status: Model loaded - real inference pending integration.';
+          statusBox && (statusBox.textContent = 'Status: Running model inference...');
+          try {
+            const imagePreviewEl = document.getElementById('imagePreview');
+            const videoEl = document.getElementById('webcamPreview');
+            const inputEl = (imagePreviewEl && imagePreviewEl.src) ? imagePreviewEl : videoEl;
+            if (!inputEl) throw new Error('No input image or video available for prediction');
+
+            // Preprocess: resize and normalize to 0-1, batch dimension
+            let imgTensor = tf.browser.fromPixels(inputEl);
+            imgTensor = tf.image.resizeBilinear(imgTensor, [224, 224]).toFloat().div(255.0).expandDims(0);
+
+            // Run model (supports LayersModel.predict and GraphModel.executeAsync)
+            let output = typeof model.predict === 'function' ? model.predict(imgTensor) : await model.executeAsync(imgTensor);
+
+            // Normalize output to a single tensor and read scores
+            const outTensor = Array.isArray(output) ? output[0] : output;
+            const scores = await outTensor.data();
+            const scoresArr = Array.from(scores);
+            const maxIdx = scoresArr.indexOf(Math.max(...scoresArr));
+            category = categories[maxIdx] || 'Unknown';
+            confidence = Math.round((scoresArr[maxIdx] || 0) * 100);
+
+            // Dispose tensors
+            try { if (Array.isArray(output)) output.forEach(t => t.dispose && t.dispose()); else output.dispose && output.dispose(); } catch(e){}
+            try { imgTensor.dispose && imgTensor.dispose(); } catch(e){}
+          } catch (inferenceErr) {
+            console.error('Inference failed, falling back to demo:', inferenceErr);
+            statusBox && (statusBox.textContent = 'Status: Inference error — demo fallback');
+            // fallback to simulated prediction below
+            const idx = Math.floor(Math.random() * categories.length);
+            category = categories[idx];
+            confidence = Math.round(60 + Math.random() * 40);
+          }
+        } else {
+          // Simulated prediction (random)
+          const idx = Math.floor(Math.random() * categories.length);
+          category = categories[idx];
+          confidence = Math.round(60 + Math.random() * 40);
         }
 
-        // Simulated prediction
-        const idx = Math.floor(Math.random()*categories.length);
-        category = categories[idx];
-        confidence = Math.round((60 + Math.random()*40));
-
         // Update UI
-        document.getElementById('resultCategory').textContent = category;
-        document.getElementById('resultDetails').textContent = `Detected as ${category}. Follow local recycling guidelines.`;
-        document.getElementById('confidenceValue').textContent = confidence + '%';
+        const resultCategoryEl = document.getElementById('resultCategory');
+        const resultDetailsEl = document.getElementById('resultDetails');
+        const confidenceValueEl = document.getElementById('confidenceValue');
         const fill = document.getElementById('confidenceFill');
-        if (fill) { fill.style.width = confidence + '%'; }
-        statusBox.textContent = 'Status: Prediction complete';
-      } catch(err){
+        if (resultCategoryEl) resultCategoryEl.textContent = category;
+        if (resultDetailsEl) resultDetailsEl.textContent = `Detected as ${category}. Follow local recycling guidelines.`;
+        if (confidenceValueEl) confidenceValueEl.textContent = confidence + '%';
+        if (fill) fill.style.width = confidence + '%';
+        statusBox && (statusBox.textContent = 'Status: Prediction complete');
+      } catch (err) {
         console.error(err);
-        document.getElementById('statusBox').textContent = 'Status: Prediction failed';
+        const statusBoxErr = document.getElementById('statusBox');
+        if (statusBoxErr) statusBoxErr.textContent = 'Status: Prediction failed';
       }
     });
   }
